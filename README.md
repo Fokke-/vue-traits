@@ -5,7 +5,7 @@
 ## Why
 
 - Design system components often expose the same knobs: spacing, color, radius, elevation. Without a shared pattern, every component repeats the prop type, the default and the styling logic.
-- A **trait** bundles a prop interface, its defaults and its output (a class name or CSS variables) in one place. A component opts in with two lines.
+- A **trait** bundles a prop interface, its defaults and its output (class names, CSS variables or attributes) in one place. A component opts in with two lines.
 - **Why not just a composable?** A composable shares the logic, but each component still declares the props, wires up defaults and merges the results by hand. `useTraits` combines any number of traits into one object for `v-bind`, and type-checks that the component actually declares every trait's props.
 - Small (< 1 kB minified and gzipped)
 - Works with SSR
