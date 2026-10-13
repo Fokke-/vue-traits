@@ -177,7 +177,7 @@ const traits = useTraits(props, [spacing, color], {
 **Runtime props declaration:**
 
 ```ts
-const props = defineProps({ ...traitProps(spacing, color) })
+const props = defineProps({ ...traitProps([spacing, color]) })
 const traits = useTraits(props, [spacing, color])
 ```
 
@@ -206,7 +206,7 @@ export const spacing = createTrait({
 import { traitProps, useTraits } from 'vue-traits'
 import { spacing } from './traits'
 
-const props = defineProps({ ...traitProps(spacing) })
+const props = defineProps({ ...traitProps([spacing]) })
 const traits = useTraits(props, [spacing])
 </script>
 
@@ -226,13 +226,13 @@ const traits = useTraits(props, [spacing])
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`createTrait<P>({ defaults, resolve })`](#quick-start) | Defines a trait for the props interface `P`. `defaults` lists every prop of `P`; `resolve` receives the values with defaults applied and returns a [`TraitOutput`](#traitoutput).                                                           |
 | [`useTraits(source, traits, options?)`](#quick-start)   | Resolves traits into a computed `{ class, style }` object for `v-bind`. `source` is the component's props, or a getter or ref for [inner elements](#multiple-traits-and-elements). Options: [`defaults`](#defaults), [`values`](#advanced). |
-| [`traitProps(...traits)`](#advanced)                    | Runtime prop definitions for `defineProps({ … })`.                                                                                                                                                                                          |
-| `traitDefaults(...traits)`                              | Merged trait defaults, for `withDefaults()` when the component reads the prop values itself.                                                                                                                                                |
+| [`traitProps(traits)`](#advanced)                       | Runtime prop definitions for `defineProps({ … })`.                                                                                                                                                                                          |
+| `traitDefaults(traits)`                                 | Merged trait defaults, for `withDefaults()` when the component reads the prop values itself.                                                                                                                                                |
 
 `useTraits` applies the trait defaults on its own. Use `traitDefaults` only when the component's script or template also needs the values with defaults applied:
 
 ```ts
-const props = withDefaults(defineProps<Spacing>(), traitDefaults(spacing))
+const props = withDefaults(defineProps<Spacing>(), traitDefaults([spacing]))
 props.spacing // 'md' instead of undefined
 ```
 

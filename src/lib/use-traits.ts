@@ -23,9 +23,7 @@ export type TraitsProps<T extends readonly AnyTrait[]> = UnionToIntersection<
 >
 
 /** Merges the defaults of the given traits, e.g. for withDefaults() */
-export const traitDefaults = <const T extends readonly AnyTrait[]>(
-  ...traits: T
-) =>
+export const traitDefaults = <const T extends readonly AnyTrait[]>(traits: T) =>
   Object.assign({}, ...traits.map((t) => t.defaults)) as TraitPropValues<
     TraitsProps<T>
   >
@@ -39,9 +37,9 @@ export const traitDefaults = <const T extends readonly AnyTrait[]>(
  * Boolean props are detected from the trait default, so boolean traits need
  * a boolean default.
  */
-export const traitProps = <const T extends readonly AnyTrait[]>(...traits: T) =>
+export const traitProps = <const T extends readonly AnyTrait[]>(traits: T) =>
   Object.fromEntries(
-    Object.entries(traitDefaults(...traits)).map(([key, value]) => [
+    Object.entries(traitDefaults(traits)).map(([key, value]) => [
       key,
       typeof value === 'boolean'
         ? { type: Boolean, default: undefined }
