@@ -2,6 +2,10 @@
   "name": "vue-traits",
   "version": "1.0.0",
   "description": "Reusable, typed style props (traits) for Vue components",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fokke-/vue-traits.git"
+  },
   "keywords": [
     "vue",
     "vue3",
@@ -11,7 +15,11 @@
     "css-variables"
   ],
   "license": "MIT",
-  "author": "Ville Fokke Saarivaara",
+  "author": {
+    "name": "Ville Fokke Saarivaara",
+    "email": "ville.saarivaara@gmail.com",
+    "url": "https://fokke.fi"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
