@@ -220,14 +220,45 @@ const traits = useTraits(props, [spacing])
 
 ## API
 
-| Export                                           | Description                                                                                                                                   |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createTrait<P>({ defaults, resolve })`          | Defines a trait for the props interface `P`.                                                                                                  |
-| `useTraits(props, traits, options?)`             | Resolves traits into a computed `{ class, style }` object for `v-bind`. `props` can also be a getter or ref. `options`: `defaults`, `values`. |
-| `traitProps(...traits)`                          | Runtime prop definitions for `defineProps({ … })`.                                                                                            |
-| `traitDefaults(...traits)`                       | Merged trait defaults.                                                                                                                        |
-| `Trait`, `TraitOutput`, `TraitPropValues`        | Trait definition, `resolve` output, prop values passed to `resolve`.                                                                          |
-| `TraitsProps`, `TraitValues`, `UseTraitsOptions` | Combined props of traits, `values` option, `useTraits` options.                                                                               |
+### Functions
+
+| Function                                                | Description                                                                                                                                                                                                                                 |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`createTrait<P>({ defaults, resolve })`](#quick-start) | Defines a trait for the props interface `P`. `defaults` lists every prop of `P`; `resolve` receives the values with defaults applied and returns a [`TraitOutput`](#traitoutput).                                                           |
+| [`useTraits(source, traits, options?)`](#quick-start)   | Resolves traits into a computed `{ class, style }` object for `v-bind`. `source` is the component's props, or a getter or ref for [inner elements](#multiple-traits-and-elements). Options: [`defaults`](#defaults), [`values`](#advanced). |
+| [`traitProps(...traits)`](#advanced)                    | Runtime prop definitions for `defineProps({ … })`.                                                                                                                                                                                          |
+| `traitDefaults(...traits)`                              | Merged trait defaults, for `withDefaults()` when the component reads the prop values itself.                                                                                                                                                |
+
+`useTraits` applies the trait defaults on its own. Use `traitDefaults` only when the component's script or template also needs the values with defaults applied:
+
+```ts
+const props = withDefaults(defineProps<Spacing>(), traitDefaults(spacing))
+props.spacing // 'md' instead of undefined
+```
+
+Defaults given this way count as `withDefaults()` defaults, so they override `useTraits`' `defaults` option (see [Defaults](#defaults)).
+
+### TraitOutput
+
+What `resolve` returns. Every key is optional.
+
+| Key     | Type                                                    | Rendered as                                                                      |
+| ------- | ------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `vars`  | `Record<string, string \| number \| null \| undefined>` | CSS custom properties in `style`. `textColor` → `--text-color`; `--` keys as is. |
+| `class` | `ClassValue`                                            | `class`                                                                          |
+| `style` | `StyleValue`                                            | Inline `style`                                                                   |
+
+Empty values (`undefined`, `null`, `''`) are left out, so a trait with no value renders no attribute.
+
+### Types
+
+| Type                                    | Use                                                                                                       |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `Trait<P>`                              | Type of a trait. Needed for [JSDoc annotations](#without-typescript) and functions that take a trait.     |
+| `TraitOutput`                           | Return type of `resolve`.                                                                                 |
+| `TraitPropValues<P>`                    | Argument of `resolve`: every prop of `P`; a value may be `undefined` or `null`.                           |
+| `TraitsProps<T>`                        | Combined props of a trait array, e.g. `TraitsProps<[typeof spacing, typeof color]>` is `Spacing & Color`. |
+| `TraitValues<T>`, `UseTraitsOptions<T>` | Types of the `values` option and the options object, for wrappers around `useTraits`.                     |
 
 ## Development
 
