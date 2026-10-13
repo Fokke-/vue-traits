@@ -53,13 +53,13 @@ export const traitProps = <const T extends readonly AnyTrait[]>(traits: T) =>
   }
 
 /** Refs or getters supplying trait values from outside props, e.g. defineModel() */
-export type TraitValues<T extends readonly AnyTrait[]> = {
+export type TraitValueSources<T extends readonly AnyTrait[]> = {
   [K in keyof Required<TraitsProps<T>>]?: MaybeRefOrGetter<TraitsProps<T>[K]>
 }
 
 export interface UseTraitsOptions<
   T extends readonly AnyTrait[],
-  V extends TraitValues<T> = TraitValues<T>,
+  V extends TraitValueSources<T> = TraitValueSources<T>,
 > {
   /** Component-level defaults, override the trait defaults */
   defaults?: Partial<TraitsProps<T>>
@@ -88,7 +88,7 @@ type MissingProps<P, T extends readonly AnyTrait[], V> = {
 export function useTraits<
   const T extends readonly AnyTrait[],
   P extends Partial<TraitsProps<T>>,
-  V extends TraitValues<T> = {},
+  V extends TraitValueSources<T> = {},
 >(
   /**
    * Component props; every trait prop not in `values` must be declared.

@@ -9,6 +9,6 @@ export {
   traitProps,
   useTraits,
   type TraitsProps,
-  type TraitValues,
+  type TraitValueSources,
   type UseTraitsOptions,
 } from './lib/use-traits'

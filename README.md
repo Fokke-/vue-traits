@@ -252,13 +252,13 @@ Empty values (`undefined`, `null`, `''`) are left out, so a trait with no value 
 
 ### Types
 
-| Type                                    | Use                                                                                                       |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `Trait<P>`                              | Type of a trait. Needed for [JSDoc annotations](#without-typescript) and functions that take a trait.     |
-| `TraitOutput`                           | Return type of `resolve`.                                                                                 |
-| `TraitPropValues<P>`                    | Argument of `resolve`: every prop of `P`; a value may be `undefined` or `null`.                           |
-| `TraitsProps<T>`                        | Combined props of a trait array, e.g. `TraitsProps<[typeof spacing, typeof color]>` is `Spacing & Color`. |
-| `TraitValues<T>`, `UseTraitsOptions<T>` | Types of the `values` option and the options object, for wrappers around `useTraits`.                     |
+| Type                                          | Use                                                                                                       |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `Trait<P>`                                    | Type of a trait. Needed for [JSDoc annotations](#without-typescript) and functions that take a trait.     |
+| `TraitOutput`                                 | Return type of `resolve`.                                                                                 |
+| `TraitPropValues<P>`                          | Argument of `resolve`: every prop of `P`; a value may be `undefined` or `null`.                           |
+| `TraitsProps<T>`                              | Combined props of a trait array, e.g. `TraitsProps<[typeof spacing, typeof color]>` is `Spacing & Color`. |
+| `TraitValueSources<T>`, `UseTraitsOptions<T>` | Types of the `values` option and the options object, for wrappers around `useTraits`.                     |
 
 ## Development
 
