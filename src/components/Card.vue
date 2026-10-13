@@ -6,9 +6,9 @@
       </h2>
     </header>
     <div class="card__body" v-bind="bodyTraits">
-      <template v-if="props.debug">
-        <pre v-if="debug">{{ { rootTraits, headerTraits, bodyTraits } }}</pre>
-      </template>
+      <pre v-if="props.debug">{{
+        { rootTraits, headerTraits, bodyTraits }
+      }}</pre>
       <slot />
     </div>
   </div>
@@ -19,14 +19,14 @@ import { useTraits } from '@/lib/use-traits'
 import {
   type BorderRadius,
   type Elevation,
+  type Gap,
   type Padding,
   type TextColor,
-  type Gap,
   borderRadius,
   elevation,
+  gap,
   padding,
   textColor,
-  gap,
 } from '@/traits'
 
 const props = withDefaults(
@@ -49,30 +49,31 @@ const props = withDefaults(
   },
 )
 
-const radius = defineModel<BorderRadius['borderRadius']>('borderRadius', {
-  default: borderRadius.defaults.borderRadius,
-})
+const radius = defineModel<BorderRadius['borderRadius']>('borderRadius')
 
+// The CSS variable defaults are in the styles below; elevation outputs a
+// class name, so its component default is set here
 const rootTraits = useTraits(
   props,
   [padding, borderRadius, elevation, textColor, gap],
   {
-    defaults: { padding: 30, elevation: 1, gap: 30 },
+    defaults: { elevation: 1 },
     values: { borderRadius: radius },
   },
 )
 
-const headerTraits = useTraits(() => props.headerProps ?? {}, [padding], {
-  defaults: { padding: 0 },
-})
+const headerTraits = useTraits(() => props.headerProps ?? {}, [padding])
 
-const bodyTraits = useTraits(() => props.bodyProps ?? {}, [padding], {
-  defaults: { padding: 0 },
-})
+const bodyTraits = useTraits(() => props.bodyProps ?? {}, [padding])
 </script>
 
 <style scoped>
 .card {
+  /* Component defaults; declaring the vars here also stops inheritance */
+  --padding: 30px;
+  --border-radius: 10px;
+  --gap: 30px;
+
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
@@ -87,6 +88,9 @@ const bodyTraits = useTraits(() => props.bodyProps ?? {}, [padding], {
 
 .card__header,
 .card__body {
+  /* Own default, so the card's --padding doesn't leak in */
+  --padding: 0;
+
   padding: 0 var(--padding);
 }
 

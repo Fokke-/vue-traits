@@ -14,24 +14,24 @@ function toPx(value: string | number | null | undefined) {
 }
 
 export interface Padding {
-  /** Padding */
+  /** Padding, exposed as `--padding`; numbers are px. Not set = component default */
   padding?: string | number
 }
 
 export const padding = createTrait<Padding>({
-  defaults: { padding: 30 },
+  defaults: { padding: undefined },
   resolve: (props) => ({
     vars: { padding: toPx(props.padding) },
   }),
 })
 
 export interface BorderRadius {
-  /** Border radius */
+  /** Border radius, exposed as `--border-radius`; numbers are px. Not set = component default */
   borderRadius?: string | number
 }
 
 export const borderRadius = createTrait<BorderRadius>({
-  defaults: { borderRadius: 10 },
+  defaults: { borderRadius: undefined },
   resolve: (props) => ({
     vars: { borderRadius: toPx(props.borderRadius) },
   }),
@@ -48,11 +48,12 @@ export const elevation = createTrait<Elevation>({
 })
 
 export interface Gap {
+  /** Gap, exposed as `--gap`; numbers are px. Not set = component default */
   gap?: string | number
 }
 
 export const gap = createTrait<Gap>({
-  defaults: { gap: 0 },
+  defaults: { gap: undefined },
   resolve: (props) => ({ vars: { gap: toPx(props.gap) } }),
 })
 
