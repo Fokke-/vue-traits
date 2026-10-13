@@ -74,7 +74,7 @@ Prop types come from the trait's interface, so `<Button spacing="xl">` is a type
 
 ## CSS variables or class names
 
-A trait's `resolve` returns any combination of `vars`, `class` and `style`. Prefer CSS variables or class names.
+A trait's `resolve` returns any combination of `vars`, `class`, `style` and `attrs`. Prefer CSS variables or class names for styling.
 
 ### CSS variables (recommended for shared traits)
 
@@ -108,6 +108,25 @@ Good when a trait has one fixed, global meaning, e.g. `elevation-2` for a shadow
 ### Inline styles
 
 `style` works too, but inline styles override every stylesheet, which makes theming and overrides harder.
+
+### Other attributes
+
+`attrs` outputs any other attribute, such as `aria-*` or `data-*`. A data attribute is an alternative to a class name for targeting a variant in CSS:
+
+```ts
+export const variant = createTrait<Variant>({
+  defaults: { variant: 'primary' },
+  resolve: ({ variant }) => ({ attrs: { 'data-variant': variant } }),
+})
+```
+
+```css
+.button[data-variant='primary'] {
+  font-weight: bold;
+}
+```
+
+`undefined` and `null` leave the attribute out; `false` renders as `"false"`, which suits attributes such as `aria-expanded`.
 
 ### Combining outputs
 
@@ -218,18 +237,19 @@ const traits = useTraits(props, [spacing])
 ```
 
 - Without the JSDoc annotation the trait works the same, but its prop type is inferred as `string`, so editors can't suggest the allowed values.
+- `resolve` may only return `vars`, `class`, `style` and `attrs`; other keys are ignored. Put other attributes in `attrs`.
 - Editors such as VS Code read the package's type declarations for JS files too, so completions and hover info work out of the box. To also see type errors, enable `checkJs` in `jsconfig.json` or add `// @ts-check` to a file.
 
 ## API
 
 ### Functions
 
-| Function                                                | Description                                                                                                                                                                                                                                 |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`createTrait<P>({ defaults, resolve })`](#quick-start) | Defines a trait for the props interface `P`. `defaults` lists every prop of `P`; `resolve` receives the values with defaults applied and returns a [`TraitOutput`](#traitoutput).                                                           |
-| [`useTraits(source, traits, options?)`](#quick-start)   | Resolves traits into a computed `{ class, style }` object for `v-bind`. `source` is the component's props, or a getter or ref for [inner elements](#multiple-traits-and-elements). Options: [`defaults`](#defaults), [`values`](#advanced). |
-| [`traitProps(traits)`](#advanced)                       | Runtime prop definitions for `defineProps({ … })`.                                                                                                                                                                                          |
-| `traitDefaults(traits)`                                 | Merged trait defaults, for `withDefaults()` when the component reads the prop values itself.                                                                                                                                                |
+| Function                                                | Description                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`createTrait<P>({ defaults, resolve })`](#quick-start) | Defines a trait for the props interface `P`. `defaults` lists every prop of `P`; `resolve` receives the values with defaults applied and returns a [`TraitOutput`](#traitoutput).                                                                                  |
+| [`useTraits(source, traits, options?)`](#quick-start)   | Resolves traits into a computed object of attributes (`class`, `style`, `attrs`) for `v-bind`. `source` is the component's props, or a getter or ref for [inner elements](#multiple-traits-and-elements). Options: [`defaults`](#defaults), [`values`](#advanced). |
+| [`traitProps(traits)`](#advanced)                       | Runtime prop definitions for `defineProps({ … })`.                                                                                                                                                                                                                 |
+| `traitDefaults(traits)`                                 | Merged trait defaults, for `withDefaults()` when the component reads the prop values itself.                                                                                                                                                                       |
 
 `useTraits` applies the trait defaults on its own. Use `traitDefaults` only when the component's script or template also needs the values with defaults applied:
 
@@ -249,8 +269,9 @@ What `resolve` returns. Every key is optional.
 | `vars`  | `Record<string, string \| number \| null \| undefined>` | CSS custom properties in `style`. `textColor` → `--text-color`; `--` keys as is. |
 | `class` | `ClassValue`                                            | `class`                                                                          |
 | `style` | `StyleValue`                                            | Inline `style`                                                                   |
+| `attrs` | `Record<string, unknown>`                               | Other attributes, e.g. `aria-*` or `data-*`                                      |
 
-Empty values (`undefined`, `null`, `''`) are left out, so a trait with no value renders no attribute.
+Empty values (`undefined`, `null`, `''`) are left out, so a trait with no value renders no attribute. Other keys returned by `resolve` are ignored.
 
 ### Types
 

@@ -13,6 +13,12 @@ export interface TraitOutput {
    * (`textColor` → `--text-color`); keys starting with `--` are kept as is.
    */
   vars?: Record<string, string | number | null | undefined>
+
+  /**
+   * Other attributes, e.g. `aria-*` or `data-*`. `undefined` and `null`
+   * leave the attribute out; `false` renders as `"false"`.
+   */
+  attrs?: Record<string, unknown>
 }
 
 /**

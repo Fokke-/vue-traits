@@ -81,7 +81,8 @@ type MissingProps<P, T extends readonly AnyTrait[], V> = {
 }
 
 /**
- * Resolves the given traits into reactive attributes ({ style, class }).
+ * Resolves the given traits into reactive attributes: class, style and the
+ * traits' `attrs`.
  *
  * Value precedence, first defined (not `undefined`) wins: `values` or source
  * value (Vue has already applied withDefaults() and defineModel() defaults) >
@@ -132,8 +133,11 @@ export function useTraits(
           const found = value !== undefined ? value : toValue(defaults[key])
           if (found !== undefined) resolved[key] = found
         }
-        const { vars, ...attrs } = t.resolve(resolved)
-        if (!vars) return attrs as Record<string, unknown>
+        // Only the known keys are used; anything else resolve returns is
+        // ignored, so a typo such as `clas` doesn't end up as an attribute
+        const { class: cls, style, vars, attrs } = t.resolve(resolved)
+        const output = mergeProps(attrs ?? {}, { class: cls, style })
+        if (!vars) return output
         // textColor → --text-color (hyphenated like Vue's style binding);
         // keys starting with -- are kept as is
         const varStyle = Object.fromEntries(
@@ -144,9 +148,7 @@ export function useTraits(
             value,
           ]),
         )
-        return mergeProps(attrs as Record<string, unknown>, {
-          style: varStyle,
-        })
+        return mergeProps(output, { style: varStyle })
       }),
     )
 
