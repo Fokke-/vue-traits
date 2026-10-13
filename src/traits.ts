@@ -74,6 +74,17 @@ export const textColor = createTrait<TextColor>({
   }),
 })
 
+export interface Busy {
+  /** Busy state, exposed as `aria-busy` */
+  busy?: boolean
+}
+
+export const busy = createTrait<Busy>({
+  // Boolean default, so traitProps() declares a boolean prop
+  defaults: { busy: false },
+  resolve: (props) => ({ attrs: { 'aria-busy': props.busy || undefined } }),
+})
+
 export interface Spacing {
   /** Spacing token, exposed as `--spacing`; not set = component default */
   spacing?: 'sm' | 'md' | 'lg'

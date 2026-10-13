@@ -89,8 +89,25 @@
         <option value="grey">Grey</option>
       </select>
     </div>
+    <div class="input-wrap">
+      <label>
+        <input type="checkbox" v-model="buttonBusy" />
+        Busy (attrs, aria-busy)
+      </label>
+    </div>
+    <div class="input-wrap">
+      <label for="density">
+        Density (reactive default: compact = sm spacing if not set)
+      </label>
+      <select id="density" v-model="density">
+        <option value="comfortable">Comfortable</option>
+        <option value="compact">Compact</option>
+      </select>
+    </div>
     <div class="input-wrap button-row">
-      <Button :spacing="buttonSpacing" :color="buttonColor">Controlled</Button>
+      <Button :spacing="buttonSpacing" :color="buttonColor" :busy="buttonBusy">
+        Controlled
+      </Button>
       <Button>Default</Button>
       <Button spacing="sm" color="red">Small red</Button>
     </div>
@@ -101,9 +118,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { provide, ref } from 'vue'
 import Button from './components/Button.vue'
 import Card from './components/Card.vue'
+import { densityKey, type Density } from './density'
 import type { Color, Spacing } from './traits'
 
 const borderRadius = ref(10)
@@ -115,6 +133,10 @@ const bodyPadding = ref(0)
 const textColor = ref('#008080')
 const buttonSpacing = ref<Spacing['spacing']>()
 const buttonColor = ref<Color['color']>()
+const buttonBusy = ref(false)
+
+const density = ref<Density>('comfortable')
+provide(densityKey, density)
 
 // Sets the vars on an ancestor: the button inside must keep its own defaults
 const leakTest = {

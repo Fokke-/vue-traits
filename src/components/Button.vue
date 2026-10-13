@@ -4,13 +4,30 @@
   </button>
 </template>
 
+<script lang="ts">
+import { busy, color, spacing } from '@/traits'
+
+// Module scope, as defineProps() can't reference variables of <script setup>
+const traits = [spacing, color, busy] as const
+</script>
+
 <script setup lang="ts">
-import { useTraits } from '@/lib/use-traits'
-import { type Color, type Spacing, color, spacing } from '@/traits'
+import { inject, ref } from 'vue'
+import { densityKey, type Density } from '@/density'
+import { traitProps, useTraits } from '@/lib/use-traits'
 
-const props = defineProps<Spacing & Color>()
+// Runtime props from the traits; Card.vue uses type-based props
+const props = defineProps({ ...traitProps(traits) })
 
-const rootTraits = useTraits(props, [spacing, color])
+const density = inject(densityKey, ref<Density>('comfortable'))
+
+const rootTraits = useTraits(props, traits, {
+  // Reactive default: compact density makes the button smaller, unless
+  // spacing is given
+  defaults: {
+    spacing: () => (density.value === 'compact' ? 'sm' : undefined),
+  },
+})
 </script>
 
 <style scoped>
@@ -27,5 +44,10 @@ const rootTraits = useTraits(props, [spacing, color])
   color: var(--color-fg);
   font: inherit;
   cursor: pointer;
+}
+
+.button[aria-busy='true'] {
+  opacity: 0.6;
+  cursor: progress;
 }
 </style>
