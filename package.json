@@ -1,7 +1,7 @@
 {
   "name": "vue-traits",
   "version": "1.0.0",
-  "description": "Reusable, typed style props (traits) for Vue components",
+  "description": "Typed, reusable props (traits) for Vue components that map to classes, styles and attributes",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Fokke-/vue-traits.git"
