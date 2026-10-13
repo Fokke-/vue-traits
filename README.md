@@ -160,6 +160,8 @@ From weakest to strongest:
 3. `withDefaults()` of the component
 4. the value passed to the component
 
+Component defaults can also be refs or getters, e.g. `{ defaults: { spacing: () => (compact.value ? 'sm' : 'md') } }`, and update when they change.
+
 `undefined` means "not given": the next default applies, and if there is none, the trait outputs nothing. `null` is an explicit empty value: it overrides all defaults and is passed to `resolve` as is, so the trait decides what it means. For example, a `textColor` trait could map `null` to `initial`. In a design system, an explicit token such as `spacing="none"` is often clearer.
 
 ## Advanced

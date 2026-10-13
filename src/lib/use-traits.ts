@@ -61,8 +61,12 @@ export interface UseTraitsOptions<
   T extends readonly AnyTrait[],
   V extends TraitValueSources<T> = TraitValueSources<T>,
 > {
-  /** Component-level defaults, override the trait defaults */
-  defaults?: Partial<TraitsProps<T>>
+  /**
+   * Component-level defaults, override the trait defaults. Each default can
+   * be a value, a ref or a getter; as with `values`, a function is called as
+   * a getter.
+   */
+  defaults?: TraitValueSources<T>
   /** Values read from refs or getters instead of props */
   values?: V
 }
@@ -112,7 +116,10 @@ export function useTraits(
 ) {
   return computed(() => {
     const props = toValue(source) as Record<string, unknown>
-    const defaults = (options.defaults ?? {}) as Record<string, unknown>
+    const defaults = (options.defaults ?? {}) as Record<
+      string,
+      MaybeRefOrGetter<unknown>
+    >
     const values = (options.values ?? {}) as Record<
       string,
       MaybeRefOrGetter<unknown>
@@ -122,7 +129,7 @@ export function useTraits(
         const resolved = { ...t.defaults } as Record<string, unknown>
         for (const key in resolved) {
           const value = key in values ? toValue(values[key]) : props[key]
-          const found = [value, defaults[key]].find((v) => v !== undefined)
+          const found = value !== undefined ? value : toValue(defaults[key])
           if (found !== undefined) resolved[key] = found
         }
         const { vars, ...attrs } = t.resolve(resolved)
