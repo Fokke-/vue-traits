@@ -105,6 +105,17 @@ export const spacing = createTrait<Spacing>({
 
 Good when a trait has one fixed, global meaning, e.g. `elevation-2` for a shadow. Note that scoped component styles are more specific than global utility classes; manage the order with `@layer` if both set the same property.
 
+If the trait has no default, guard the class name, as a template string turns a missing value into e.g. `elevation-undefined`:
+
+```ts
+export const elevation = createTrait<Elevation>({
+  defaults: { elevation: undefined },
+  resolve: ({ elevation }) => ({
+    class: elevation != null && `elevation-${elevation}`, // 0 is still a valid value
+  }),
+})
+```
+
 ### Inline styles
 
 `style` works too, but inline styles override every stylesheet, which makes theming and overrides harder.
@@ -245,6 +256,7 @@ const traits = useTraits(props, [spacing])
 </template>
 ```
 
+- `defaults` defines which props the trait has: list every prop, with `undefined` if it has no default. A prop missing from `defaults` is silently ignored; only type checking with the JSDoc annotation above catches it.
 - Without the JSDoc annotation the trait works the same, but its prop type is inferred as `string`, so editors can't suggest the allowed values.
 - `resolve` may only return `vars`, `class`, `style` and `attrs`; other keys are ignored. Put other attributes in `attrs`.
 - Editors such as VS Code read the package's type declarations for JS files too, so completions and hover info work out of the box. To also see type errors, enable `checkJs` in `jsconfig.json` or add `// @ts-check` to a file.
