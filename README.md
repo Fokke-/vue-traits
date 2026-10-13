@@ -1,6 +1,6 @@
 # vue-traits
 
-Typed, reusable style props for Vue components. Define a trait once, use it in every component of your design system.
+> Typed, reusable style props for Vue components. Define a trait once, use it in every component of your design system.
 
 ## Why
 
@@ -223,6 +223,16 @@ const traits = useTraits(props, [spacing, color])
 ```
 
 **Boolean props:** Vue casts an absent boolean prop to `false`. With type-based props, use `withDefaults(defineProps<…>(), { flag: undefined })` to let the trait default apply. With `traitProps()`, give boolean traits a boolean default; it is used to detect the prop type.
+
+**Reactive values in `resolve`:** `resolve` runs inside a computed, so anything reactive it reads is tracked, e.g. a ref from a store:
+
+```ts
+resolve: ({ open }) => ({
+  attrs: { 'aria-expanded': open, 'aria-label': label.value }, // not `label`
+})
+```
+
+Return the value, not the ref or a getter: Vue doesn't unwrap them in `v-bind`. This logs a warning in development.
 
 ## Without TypeScript
 

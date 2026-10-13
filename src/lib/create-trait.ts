@@ -43,6 +43,9 @@ export interface Trait<P extends object = object> {
   /**
    * Maps prop values (defaults applied) to attributes. `undefined` = no value
    * given; `null` = explicit empty value, its meaning is up to the trait.
+   * Runs inside a computed, so reactive values read here (`label.value`) are
+   * tracked. Return plain values, not refs or getters, and keep it free of
+   * side effects.
    */
   resolve(props: TraitPropValues<P>): TraitOutput
 }

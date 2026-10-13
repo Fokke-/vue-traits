@@ -1,5 +1,6 @@
 import {
   computed,
+  isRef,
   mergeProps,
   toValue,
   type ComputedRef,
@@ -7,7 +8,7 @@ import {
   type PropType,
   type Ref,
 } from 'vue'
-import type { Trait, TraitPropValues } from './create-trait'
+import type { Trait, TraitOutput, TraitPropValues } from './create-trait'
 
 type UnionToIntersection<U> = (
   U extends unknown ? (arg: U) => void : never
@@ -23,10 +24,16 @@ declare const process: { env: { NODE_ENV?: string } }
 
 const warned = new Set<string>()
 
+/** Warns once per message, so repeated instances don't repeat the warning */
+const warnOnce = (message: string) => {
+  if (warned.has(message)) return
+  warned.add(message)
+  console.warn(`[vue-traits] ${message}`)
+}
+
 /**
  * Warns in development if traits share a prop with different defaults: each
  * trait falls back to its own default, so the prop can resolve differently.
- * Each conflict is warned about once.
  */
 const warnConflictingDefaults = (traits: readonly AnyTrait[]) => {
   const seen: Record<string, unknown> = {}
@@ -34,13 +41,38 @@ const warnConflictingDefaults = (traits: readonly AnyTrait[]) => {
     for (const key in t.defaults) {
       const value = t.defaults[key]
       if (key in seen && !Object.is(seen[key], value)) {
-        const message = `[vue-traits] Traits share the prop "${key}" with different defaults (${String(seen[key])} and ${String(value)}). Each trait falls back to its own default.`
-        if (!warned.has(message)) {
-          warned.add(message)
-          console.warn(message)
-        }
+        warnOnce(
+          `Traits share the prop "${key}" with different defaults (${String(seen[key])} and ${String(value)}). Each trait falls back to its own default.`,
+        )
       }
       seen[key] = value
+    }
+  }
+}
+
+/**
+ * Warns in development if resolve() returned a ref or a getter as a value.
+ * Vue doesn't unwrap them in v-bind, so the object itself would be rendered;
+ * resolve() must read the value instead (`label.value`), which is reactive.
+ * Functions are allowed for event listeners in `attrs` (`onClick`).
+ */
+const warnReactiveOutput = (output: TraitOutput) => {
+  const entries: [string, unknown][] = [
+    ['class', output.class],
+    ['style', output.style],
+    ...Object.entries(output.vars ?? {}).map(([k, v]): [string, unknown] => [
+      `vars.${k}`,
+      v,
+    ]),
+    ...Object.entries(output.attrs ?? {})
+      .filter(([k]) => !/^on[^a-z]/.test(k))
+      .map(([k, v]): [string, unknown] => [`attrs.${k}`, v]),
+  ]
+  for (const [path, value] of entries) {
+    if (isRef(value) || typeof value === 'function') {
+      warnOnce(
+        `resolve() returned a ${isRef(value) ? 'ref' : 'function'} as "${path}". Return its value instead, e.g. \`label.value\`; reading it in resolve() keeps it reactive.`,
+      )
     }
   }
 }
@@ -168,7 +200,11 @@ export function useTraits(
         }
         // Only the known keys are used; anything else resolve returns is
         // ignored, so a typo such as `clas` doesn't end up as an attribute
-        const { class: cls, style, vars, attrs } = t.resolve(resolved)
+        const traitOutput = t.resolve(resolved)
+        if (process.env.NODE_ENV !== 'production') {
+          warnReactiveOutput(traitOutput)
+        }
+        const { class: cls, style, vars, attrs } = traitOutput
         const output = mergeProps(attrs ?? {}, { class: cls, style })
         if (!vars) return output
         // textColor → --text-color (hyphenated like Vue's style binding);
