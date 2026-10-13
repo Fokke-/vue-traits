@@ -17,16 +17,48 @@ type UnionToIntersection<U> = (
 
 type AnyTrait = Trait<any>
 
+// Bundlers replace process.env.NODE_ENV, so the dev-only code is removed from
+// production builds
+declare const process: { env: { NODE_ENV?: string } }
+
+const warned = new Set<string>()
+
+/**
+ * Warns in development if traits share a prop with different defaults: each
+ * trait falls back to its own default, so the prop can resolve differently.
+ * Each conflict is warned about once.
+ */
+const warnConflictingDefaults = (traits: readonly AnyTrait[]) => {
+  const seen: Record<string, unknown> = {}
+  for (const t of traits) {
+    for (const key in t.defaults) {
+      const value = t.defaults[key]
+      if (key in seen && !Object.is(seen[key], value)) {
+        const message = `[vue-traits] Traits share the prop "${key}" with different defaults (${String(seen[key])} and ${String(value)}). Each trait falls back to its own default.`
+        if (!warned.has(message)) {
+          warned.add(message)
+          console.warn(message)
+        }
+      }
+      seen[key] = value
+    }
+  }
+}
+
 /** Combined props interface of the given traits */
 export type TraitsProps<T extends readonly AnyTrait[]> = UnionToIntersection<
   T[number] extends Trait<infer P> ? P : never
 >
 
 /** Merges the defaults of the given traits, e.g. for withDefaults() */
-export const traitDefaults = <const T extends readonly AnyTrait[]>(traits: T) =>
-  Object.assign({}, ...traits.map((t) => t.defaults)) as TraitPropValues<
+export const traitDefaults = <const T extends readonly AnyTrait[]>(
+  traits: T,
+) => {
+  if (process.env.NODE_ENV !== 'production') warnConflictingDefaults(traits)
+  return Object.assign({}, ...traits.map((t) => t.defaults)) as TraitPropValues<
     TraitsProps<T>
   >
+}
 
 /**
  * Runtime prop definitions of the given traits, for runtime defineProps().
@@ -115,6 +147,7 @@ export function useTraits(
   traits: readonly AnyTrait[],
   options: { defaults?: object; values?: object } = {},
 ) {
+  if (process.env.NODE_ENV !== 'production') warnConflictingDefaults(traits)
   return computed(() => {
     const props = toValue(source) as Record<string, unknown>
     const defaults = (options.defaults ?? {}) as Record<

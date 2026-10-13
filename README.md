@@ -170,6 +170,15 @@ const headerTraits = useTraits(() => props.headerProps ?? {}, [spacing])
 <Card :header-props="{ spacing: 'sm' }" />
 ```
 
+### Conflicts between traits
+
+When traits output the same thing, the result depends on the output:
+
+- `style`, `vars` and `attrs`: the later trait in the array wins.
+- `class`: both classes are added, and CSS decides which rule applies.
+
+Traits that share a prop read the same value. If they have different defaults, each falls back to its own one, so the prop can resolve differently in each trait; this logs a warning in development. Avoid sharing props, or give them the same default.
+
 ## Defaults
 
 From weakest to strongest:
