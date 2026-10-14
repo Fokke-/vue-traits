@@ -319,6 +319,7 @@ Empty values (`undefined`, `null`, `''`) are left out, so a trait with no value 
 ```sh
 pnpm install
 pnpm dev    # demo app
+pnpm test   # tests in watch mode; `pnpm test:run` runs them once
 pnpm build  # library and type declarations into dist/
 ```
 
