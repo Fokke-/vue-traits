@@ -4,6 +4,10 @@ name: Publish
 # approves the staged version with 2FA on npmjs.com before it goes public.
 # Authentication uses trusted publishing (OIDC): there are no npm tokens or
 # secrets anywhere, npm issues a short-lived credential for this workflow.
+#
+# Two jobs, so that only npm can use the OIDC credential: `build` runs the
+# project and its dependencies without it, `publish` gets it but only stages
+# the tarball built by `build`, without the repository or its dependencies.
 on:
   push:
     tags: ['v*']
@@ -16,11 +20,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write # OIDC for npm trusted publishing
+    outputs:
+      dist-tag: ${{ steps.check.outputs.dist-tag }}
+      tarball: ${{ steps.pack.outputs.tarball }}
+      integrity: ${{ steps.pack.outputs.integrity }}
     steps:
       # Actions are pinned to commit SHAs, as tags can be moved
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -28,20 +35,13 @@ jobs:
           persist-credentials: false
           fetch-depth: 0 # branches, to check where the tag points
 
-      # Node.js from setup-node, as it comes with npm 11, which staged
-      # publishing needs; pnpm's Node.js runtime comes without npm. No caches
-      # in release builds, and no registry-url, so no .npmrc is written.
+      # No caches in release builds
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           package-manager-cache: false
 
-      # pnpm only, using the Node.js above
-      - uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
-        with:
-          cache: false
-          require-lockfile: true
-
+      # Before installing anything, so a wrong tag stops right away
       - name: Check release
         id: check
         env:
@@ -49,10 +49,82 @@ jobs:
           SHA: ${{ github.sha }}
         run: bash .github/scripts/check-release.sh
 
+      # pnpm only, using the Node.js above
+      - uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          cache: false
+          require-lockfile: true
+
       - run: pnpm test:run
       - run: pnpm build
 
+      # The same tarball npm publish would create; scripts already ran above
+      - name: Pack
+        id: pack
+        run: |
+          mkdir -p "$RUNNER_TEMP/package"
+          npm pack --ignore-scripts --json --pack-destination "$RUNNER_TEMP/package" >"$RUNNER_TEMP/pack.json"
+          tarball=$(node -p "require(process.argv[1])[0].filename" "$RUNNER_TEMP/pack.json")
+          integrity=$(node -p "require(process.argv[1])[0].integrity" "$RUNNER_TEMP/pack.json")
+          echo "tarball=$tarball" >>"$GITHUB_OUTPUT"
+          echo "integrity=$integrity" >>"$GITHUB_OUTPUT"
+          {
+            echo "### Package to approve"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Tarball | \`$tarball\` |"
+            echo "| Integrity | \`$integrity\` |"
+            echo
+            echo "Compare the integrity with the staged package before approving it."
+          } >>"$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package
+          path: ${{ runner.temp }}/package/${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # OIDC for npm trusted publishing
+    steps:
+      # Comes with npm 11, which staged publishing needs. No registry-url, so
+      # no .npmrc is written.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      # Fails if the artifact's digest doesn't match the uploaded one
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+          path: ${{ runner.temp }}/package
+
+      - name: Check npm and tarball
+        env:
+          TARBALL: ${{ needs.build.outputs.tarball }}
+          INTEGRITY: ${{ needs.build.outputs.integrity }}
+        run: |
+          node -e '
+            const [major, minor] = process.argv[1].split(".").map(Number)
+            if (!(major > 11 || (major === 11 && minor >= 15))) {
+              console.log(`::error::npm ${process.argv[1]} is too old for staged publishing (needs 11.15.0+)`)
+              process.exit(1)
+            }
+          ' "$(npm --version)"
+          actual="sha512-$(openssl dgst -sha512 -binary "$RUNNER_TEMP/package/$TARBALL" | base64 -w0)"
+          if [[ "$actual" != "$INTEGRITY" ]]; then
+            echo "::error::Tarball integrity $actual does not match the built $INTEGRITY"
+            exit 1
+          fi
+
       - name: Stage on npm
         env:
-          DIST_TAG: ${{ steps.check.outputs.dist-tag }}
-        run: npm stage publish --tag "$DIST_TAG"
+          TARBALL: ${{ needs.build.outputs.tarball }}
+          DIST_TAG: ${{ needs.build.outputs.dist-tag }}
+        run: npm stage publish "$RUNNER_TEMP/package/$TARBALL" --tag "$DIST_TAG" --ignore-scripts

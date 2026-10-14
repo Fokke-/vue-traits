@@ -331,10 +331,25 @@ pnpm build  # library and type declarations into dist/
 
 Releases are published from GitHub Actions with npm trusted publishing, so no npm tokens are stored anywhere.
 
-1. Update `version` in `package.json` and add the changes to `CHANGELOG.md`, then commit and push the branch. The commit must be on GitHub before the tag: the workflow checks that the tagged commit is on `master` (stable versions) or on `master` or `dev` (prereleases such as `1.2.3-beta.1`).
-2. Tag the commit and push the tag: `git tag v1.2.3 && git push origin v1.2.3`.
-3. The [Publish workflow](.github/workflows/publish.yml) checks the tag, runs the tests and builds, and stages the package on npm. Prereleases get the dist-tag of their name (`beta`), stable versions `latest`.
-4. Approve the staged version with 2FA on npmjs.com (Staged Packages) to make it public.
+1. Add the changes to `CHANGELOG.md` and commit them.
+2. Bump the version; this commits `package.json` and creates the tag:
+
+   ```sh
+   pnpm version prerelease --preid beta   # 1.2.3-beta.1 → 1.2.3-beta.2
+   pnpm version 1.2.3                     # or an exact version
+   ```
+
+3. Push the branch and the tag together: `git push --follow-tags origin dev`. Stable versions must be released from `master`, prereleases such as `1.2.3-beta.1` from `master` or `dev`; the workflow checks that the tagged commit is on that branch.
+4. The [Publish workflow](.github/workflows/publish.yml) checks the tag, runs the tests, builds and packs the package, and stages the tarball on npm. Prereleases get the dist-tag of their name (`beta`), stable versions `latest`. Only the staging step can use the npm credential; it doesn't run the project or its dependencies.
+5. Check that the staged package is the one the workflow built: download it and compare its integrity with the one in the workflow run's summary.
+
+   ```sh
+   npm stage list vue-traits      # find the stage id
+   npm stage download <stage-id>
+   echo "sha512-$(openssl dgst -sha512 -binary vue-traits-1.2.3.tgz | base64 | tr -d '\n')"
+   ```
+
+6. Approve the staged version with 2FA on npmjs.com (Staged Packages) or with `npm stage approve <stage-id>` to make it public.
 
 ## License
 

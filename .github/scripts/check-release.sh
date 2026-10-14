@@ -7,7 +7,6 @@
 # - The tag must be `v` + the version in package.json
 # - A stable version must be on master; a prerelease on master or dev
 # - The version must not be on npm yet
-# - npm must support staged publishing
 set -euo pipefail
 
 : "${TAG:?TAG is not set}"
@@ -55,12 +54,5 @@ elif ! grep -q E404 "$work_dir/npm-view.log"; then
   fail "Could not check whether $name@$version is on npm"
 fi
 
-npm_version=$(npm --version)
-node -e '
-  const [a, b] = process.argv[1].split(".").map(Number)
-  process.exit(a > 11 || (a === 11 && b >= 15) ? 0 : 1)
-' "$npm_version" ||
-  fail "npm $npm_version is too old for staged publishing (needs 11.15.0+)"
-
-echo "Publishing $name@$version with dist-tag $dist_tag (npm $npm_version)"
+echo "Publishing $name@$version with dist-tag $dist_tag"
 echo "dist-tag=$dist_tag" >>"$GITHUB_OUTPUT"
