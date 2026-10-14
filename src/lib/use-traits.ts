@@ -82,7 +82,11 @@ export type TraitsProps<T extends readonly AnyTrait[]> = UnionToIntersection<
   T[number] extends Trait<infer P> ? P : never
 >
 
-/** Merges the defaults of the given traits, e.g. for withDefaults() */
+/**
+ * Merges the defaults of the given traits, e.g. for withDefaults(). Only use
+ * it there for traits with a default: withDefaults() types the props as not
+ * `undefined`, even where the trait default is `undefined`.
+ */
 export const traitDefaults = <const T extends readonly AnyTrait[]>(
   traits: T,
 ) => {
@@ -138,11 +142,23 @@ export interface UseTraitsOptions<
 /**
  * Requires the trait props missing from P (and not given in `values`), so a
  * forgotten prop declaration is a type error naming the missing prop.
+ *
+ * With nothing missing it is `unknown`, not an empty mapped type: an empty
+ * mapped type stays in the intersection with the props type and turns off
+ * TypeScript's check for objects with no properties in common. A getter or
+ * ref with wrong values would then be accepted as props instead of being
+ * checked by the getter/ref overload.
  */
-type MissingProps<P, T extends readonly AnyTrait[], V> = {
-  [K in Exclude<keyof Required<TraitsProps<T>>, keyof P | keyof V>]:
-    TraitsProps<T>[K] | undefined
-}
+type MissingProps<P, T extends readonly AnyTrait[], V> = [
+  MissingKeys<P, T, V>,
+] extends [never]
+  ? unknown
+  : { [K in MissingKeys<P, T, V>]: TraitsProps<T>[K] | undefined }
+
+type MissingKeys<P, T extends readonly AnyTrait[], V> = Exclude<
+  keyof Required<TraitsProps<T>>,
+  keyof P | keyof V
+>
 
 /**
  * Resolves the given traits into reactive attributes: class, style and the

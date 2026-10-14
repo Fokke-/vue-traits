@@ -174,7 +174,7 @@ body {
   align-items: center;
   justify-content: flex-start;
   font-family: sans-serif;
-  gap: 5vw;
+  gap: clamp(1rem, 5vw, 2rem);
   width: 100vw;
   min-height: 100dvh;
   padding: 5vw;

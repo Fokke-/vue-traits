@@ -1,5 +1,7 @@
 # vue-traits
 
+[![CI](https://github.com/Fokke-/vue-traits/actions/workflows/ci.yml/badge.svg)](https://github.com/Fokke-/vue-traits/actions/workflows/ci.yml)
+
 > Typed, reusable props for Vue components. Define once how a prop maps to classes, styles and attributes, and use it in every component of your design system.
 
 ## Why
@@ -291,6 +293,8 @@ props.spacing // 'md' instead of undefined
 
 Defaults given this way count as `withDefaults()` defaults, so they override `useTraits`' `defaults` option (see [Defaults](#defaults)).
 
+Use it only for traits that have a default. `withDefaults()` types every prop it gets a default for as never `undefined`, so a trait without a default (`defaults: { spacing: undefined }`) would get a type that doesn't allow the `undefined` it actually has.
+
 ### TraitOutput
 
 What `resolve` returns. Every key is optional.
@@ -319,8 +323,66 @@ Empty values (`undefined`, `null`, `''`) are left out, so a trait with no value 
 ```sh
 pnpm install
 pnpm dev    # demo app
+pnpm test   # tests in watch mode; `pnpm test:run` runs them once
 pnpm build  # library and type declarations into dist/
 ```
+
+### Releasing
+
+Releases are published from GitHub Actions with npm trusted publishing, so no npm tokens are stored anywhere. Pushing a version tag starts the [Publish workflow](.github/workflows/publish.yml). It checks that the tag matches the version in `package.json` and that the tagged commit is on `master` (stable versions) or on `master` or `dev` (prereleases), then runs the tests, builds and packs the package, and stages the tarball on npm. Only the staging step can use the npm credential; it doesn't run the project or its dependencies.
+
+#### Prerelease (from `dev`)
+
+1. Add the changes to `CHANGELOG.md` and commit them.
+2. Bump the version; this commits `package.json` and creates the tag:
+
+   ```sh
+   pnpm version prerelease --preid beta   # 1.2.3-beta.1 → 1.2.3-beta.2
+   ```
+
+3. Push the branch and the tag together: `git push --follow-tags origin dev`.
+
+The release gets the dist-tag of its name (`beta`). Continue with [approving the release](#approving-the-release).
+
+#### Stable release (from `master`)
+
+`master` only takes changes through pull requests, so the version is bumped in a pull request and the tag is created after merging it.
+
+1. On `dev`, add the changes to `CHANGELOG.md`, bump the version without a tag and push:
+
+   ```sh
+   pnpm version 1.2.3 --no-git-tag-version   # package.json only
+   git commit -am "Release 1.2.3"
+   git push origin dev
+   ```
+
+2. Open a pull request from `dev` to `master` and merge it with a merge commit once CI passes.
+3. Tag the merged `master` and push the tag:
+
+   ```sh
+   git checkout master && git pull
+   git tag -a v1.2.3 -m "1.2.3"
+   git push origin v1.2.3
+   ```
+
+4. Bring `dev` up to date: `git checkout dev && git merge --ff-only master && git push origin dev`.
+
+The release gets the dist-tag `latest`. Continue with [approving the release](#approving-the-release).
+
+#### Approving the release
+
+1. When the workflow has finished, check that the staged package is the one it built: download it and compare its integrity with the one in the workflow run's summary.
+
+   ```sh
+   pnpm stage list vue-traits                # find the stage id
+   cd "$(mktemp -d)"                         # download outside the project
+   pnpm stage download <stage-id>            # vue-traits-<version>-<stage-id>.tgz
+   echo "sha512-$(openssl dgst -sha512 -binary vue-traits-*.tgz | base64 | tr -d '\n')"
+   ```
+
+2. Approve the staged version with 2FA on npmjs.com (Staged Packages) or with `pnpm stage approve <stage-id>` to make it public.
+
+The `npm stage` commands work the same, but need npm 11.15.0 or later.
 
 ## License
 
