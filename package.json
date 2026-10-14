@@ -1,6 +1,6 @@
 {
   "name": "vue-traits",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "Typed, reusable props (traits) for Vue components that map to classes, styles and attributes",
   "repository": {
     "type": "git",
@@ -34,6 +34,9 @@
       "types": "./dist/entry-lib.d.ts",
       "import": "./dist/vue-traits.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "prepare": "husky",

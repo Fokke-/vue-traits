@@ -1,0 +1,51 @@
+name: Publish
+
+# Stages the package on npm when a version tag is pushed. A maintainer then
+# approves the staged version with 2FA on npmjs.com before it goes public.
+# Authentication uses trusted publishing (OIDC): there are no npm tokens or
+# secrets anywhere, npm issues a short-lived credential for this workflow.
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+# Never cancel a publish in progress
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC for npm trusted publishing
+    steps:
+      # Actions are pinned to commit SHAs, as tags can be moved
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # branches, to check where the tag points
+
+      # No cache in release builds
+      - uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          runtime: node@24
+          cache: false
+          require-lockfile: true
+
+      - name: Check release
+        id: check
+        env:
+          TAG: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: bash .github/scripts/check-release.sh
+
+      - run: pnpm test:run
+      - run: pnpm build
+
+      - name: Stage on npm
+        env:
+          DIST_TAG: ${{ steps.check.outputs.dist-tag }}
+        run: npm stage publish --tag "$DIST_TAG"

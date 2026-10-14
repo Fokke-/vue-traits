@@ -327,6 +327,15 @@ pnpm test   # tests in watch mode; `pnpm test:run` runs them once
 pnpm build  # library and type declarations into dist/
 ```
 
+### Releasing
+
+Releases are published from GitHub Actions with npm trusted publishing, so no npm tokens are stored anywhere.
+
+1. Update `version` in `package.json` and add the changes to `CHANGELOG.md`, then commit.
+2. Tag the commit and push the tag: `git tag v1.2.3 && git push origin v1.2.3`. Stable versions must be tagged on `master`, prereleases such as `1.2.3-beta.1` on `master` or `dev`.
+3. The [Publish workflow](.github/workflows/publish.yml) checks the tag, runs the tests and builds, and stages the package on npm. Prereleases get the dist-tag of their name (`beta`), stable versions `latest`.
+4. Approve the staged version with 2FA on npmjs.com (Staged Packages) to make it public.
+
 ## License
 
 MIT © [Ville Fokke Saarivaara](https://fokke.fi)
