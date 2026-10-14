@@ -46,7 +46,7 @@
     "build": "run-s type-check build:lib build:types",
     "build:lib": "vite build --mode lib",
     "build:types": "tsc -p tsconfig.lib.json",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "run-s test:run build"
   },
   "lint-staged": {
     "*.{ts,js,mjs,cjs,vue,html,css,json,md,yaml,yml}": "prettier --write"

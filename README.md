@@ -1,5 +1,7 @@
 # vue-traits
 
+[![CI](https://github.com/Fokke-/vue-traits/actions/workflows/ci.yml/badge.svg)](https://github.com/Fokke-/vue-traits/actions/workflows/ci.yml)
+
 > Typed, reusable props for Vue components. Define once how a prop maps to classes, styles and attributes, and use it in every component of your design system.
 
 ## Why
