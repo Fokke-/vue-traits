@@ -1,7 +1,7 @@
 // Type-checks the tests (see `npm run type-check`)
 {
   "extends": "./tsconfig.app.json",
-  "include": ["tests/**/*", "env.d.ts"],
+  "include": ["tests/**/*", "tests/**/*.vue", "env.d.ts"],
   "exclude": [],
   "compilerOptions": {
     "types": ["node"],
