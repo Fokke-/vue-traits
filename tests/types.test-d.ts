@@ -2,6 +2,7 @@ import { describe, expectTypeOf, it } from 'vitest'
 import {
   type ComputedRef,
   type PropType,
+  computed,
   defineProps,
   ref,
   withDefaults,
@@ -112,7 +113,20 @@ describe('useTraits', () => {
 
   it('accepts a getter or a ref to a partial object as the source', () => {
     useTraits(() => ({ size: 'sm' as const }), [size, tone])
+    useTraits(() => ({}), [size, tone])
     useTraits(ref<Size>({}), [size, tone])
+  })
+
+  it('checks the values of a getter or a ref source', () => {
+    // @ts-expect-error not a size
+    useTraits(() => ({ size: 'xl' as const }), [size])
+    // @ts-expect-error not a trait prop
+    useTraits(() => ({ bogus: 1 }), [size])
+    // @ts-expect-error not a size
+    useTraits(ref({ size: 'xl' as const }), [size])
+    const computedSize = computed(() => ({ size: 'xl' as const }))
+    // @ts-expect-error not a size
+    useTraits(computedSize, [size])
   })
 })
 
