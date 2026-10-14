@@ -28,10 +28,17 @@ jobs:
           persist-credentials: false
           fetch-depth: 0 # branches, to check where the tag points
 
-      # No cache in release builds
+      # Node.js from setup-node, as it comes with npm 11, which staged
+      # publishing needs; pnpm's Node.js runtime comes without npm. No caches
+      # in release builds, and no registry-url, so no .npmrc is written.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      # pnpm only, using the Node.js above
       - uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
         with:
-          runtime: node@24
           cache: false
           require-lockfile: true
 
