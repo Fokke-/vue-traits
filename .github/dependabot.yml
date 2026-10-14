@@ -1,0 +1,18 @@
+# Keeps the actions in the workflows up to date. They are pinned to commit
+# SHAs; Dependabot updates the SHA and the version comment after it.
+# npm dependencies are updated by hand, see Dependabot alerts for security
+# issues.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    # Waits a week before suggesting a new release, so that a compromised
+    # release is likely found and pulled before it gets here
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ['*']
