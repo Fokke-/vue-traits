@@ -17,6 +17,8 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     typecheck: {
       enabled: true,
+      // vue-tsc, so that tests can import .vue fixtures
+      checker: 'vue-tsc',
       include: ['tests/**/*.test-d.ts'],
       tsconfig: './tsconfig.vitest.json',
     },
