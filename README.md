@@ -374,12 +374,15 @@ The release gets the dist-tag `latest`. Continue with [approving the release](#a
 1. When the workflow has finished, check that the staged package is the one it built: download it and compare its integrity with the one in the workflow run's summary.
 
    ```sh
-   npm stage list vue-traits      # find the stage id
-   npm stage download <stage-id>
-   echo "sha512-$(openssl dgst -sha512 -binary vue-traits-1.2.3.tgz | base64 | tr -d '\n')"
+   pnpm stage list vue-traits                # find the stage id
+   cd "$(mktemp -d)"                         # download outside the project
+   pnpm stage download <stage-id>            # vue-traits-<version>-<stage-id>.tgz
+   echo "sha512-$(openssl dgst -sha512 -binary vue-traits-*.tgz | base64 | tr -d '\n')"
    ```
 
-2. Approve the staged version with 2FA on npmjs.com (Staged Packages) or with `npm stage approve <stage-id>` to make it public.
+2. Approve the staged version with 2FA on npmjs.com (Staged Packages) or with `pnpm stage approve <stage-id>` to make it public.
+
+The `npm stage` commands work the same, but need npm 11.15.0 or later.
 
 ## License
 
