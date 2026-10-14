@@ -291,6 +291,8 @@ props.spacing // 'md' instead of undefined
 
 Defaults given this way count as `withDefaults()` defaults, so they override `useTraits`' `defaults` option (see [Defaults](#defaults)).
 
+Use it only for traits that have a default. `withDefaults()` types every prop it gets a default for as never `undefined`, so a trait without a default (`defaults: { spacing: undefined }`) would get a type that doesn't allow the `undefined` it actually has.
+
 ### TraitOutput
 
 What `resolve` returns. Every key is optional.

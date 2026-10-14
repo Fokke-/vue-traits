@@ -82,7 +82,11 @@ export type TraitsProps<T extends readonly AnyTrait[]> = UnionToIntersection<
   T[number] extends Trait<infer P> ? P : never
 >
 
-/** Merges the defaults of the given traits, e.g. for withDefaults() */
+/**
+ * Merges the defaults of the given traits, e.g. for withDefaults(). Only use
+ * it there for traits with a default: withDefaults() types the props as not
+ * `undefined`, even where the trait default is `undefined`.
+ */
 export const traitDefaults = <const T extends readonly AnyTrait[]>(
   traits: T,
 ) => {
